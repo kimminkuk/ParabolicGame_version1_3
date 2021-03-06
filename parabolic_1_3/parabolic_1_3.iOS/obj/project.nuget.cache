@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "w++J/jWtLK6FA9igSnYnTPNN3KWYiwDnlCMAcZ+y7HAR3qZaNMXbmvm1s28Ze9oIzK/0dZ2tdEqBlXt44jaszw==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\rlaal\\source\\repos\\parabolic_1_3\\parabolic_1_3\\parabolic_1_3.iOS\\parabolic_1_3.iOS.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\rlaal\\.nuget\\packages\\skiasharp\\2.80.3-preview.40\\skiasharp.2.80.3-preview.40.nupkg.sha512",
+    "C:\\Users\\rlaal\\.nuget\\packages\\skiasharp.views\\2.80.3-preview.40\\skiasharp.views.2.80.3-preview.40.nupkg.sha512",
+    "C:\\Users\\rlaal\\.nuget\\packages\\skiasharp.views.forms\\2.80.3-preview.40\\skiasharp.views.forms.2.80.3-preview.40.nupkg.sha512",
+    "C:\\Microsoft\\Xamarin\\NuGet\\xamarin.essentials\\1.5.3.2\\xamarin.essentials.1.5.3.2.nupkg.sha512",
+    "C:\\Microsoft\\Xamarin\\NuGet\\xamarin.forms\\4.8.0.1451\\xamarin.forms.4.8.0.1451.nupkg.sha512"
+  ],
+  "logs": []
+}

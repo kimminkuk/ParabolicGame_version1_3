@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="parabolic_1_3.MainPage">
+
+    <StackLayout>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="10*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="tmp" Text="test" Clicked="BTN1_Clicked" BackgroundColor="Blue"
+                    Grid.Column="0"/>
+            <Button x:Name="tmp2" Text="test2" Clicked="BTN2_Clicked" BackgroundColor="Red"
+                    Grid.Column="1"/>
+
+            <skia:SKCanvasView x:Name="CanvasView"
+                               PaintSurface="CanvasView_PaintSurface"
+                               Grid.Row="1"
+                               Grid.ColumnSpan="2"/>
+        </Grid>
+    </StackLayout>
+
+</ContentPage>
