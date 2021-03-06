@@ -5,8 +5,35 @@
              x:Class="parabolic_1_3.MainPage">
 
     <StackLayout>
+        <Slider x:Name="PowerSlider"
+                    Maximum="1000"
+                    Margin="20,0"
+                    ValueChanged="Slider_ValueChanged"/>
+        <Label HorizontalTextAlignment="Center"
+                   Text="{Binding Source={x:Reference PowerSlider},
+                                            Path=Value,
+                                            StringFormat='Power = {0:F0}'}"/>
+
+        <Slider x:Name="SpeedSlider"
+                    Maximum="1000"
+                    Margin="20,0"
+                    ValueChanged="Slider_ValueChanged"/>
+        <Label HorizontalTextAlignment="Center"
+                   Text="{Binding Source={x:Reference SpeedSlider},
+                                            Path=Value,
+                                            StringFormat='Speed = {0:F0}'}"/>
+
+        <Slider x:Name="RadSlider"
+                    Maximum="360"
+                    Margin="20,0"
+                    ValueChanged="Slider_ValueChanged"/>
+        <Label HorizontalTextAlignment="Center"
+                   Text="{Binding Source={x:Reference RadSlider},
+                                            Path=Value,
+                                            StringFormat='Rad = {0:F0}'}"/>
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="10*"/>
             </Grid.RowDefinitions>
@@ -22,7 +49,7 @@
 
             <skia:SKCanvasView x:Name="CanvasView"
                                PaintSurface="CanvasView_PaintSurface"
-                               Grid.Row="1"
+                               Grid.Row="2"
                                Grid.ColumnSpan="2"/>
         </Grid>
     </StackLayout>

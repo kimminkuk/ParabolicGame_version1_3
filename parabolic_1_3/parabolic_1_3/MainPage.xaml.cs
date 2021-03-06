@@ -16,6 +16,7 @@ namespace parabolic_1_3
     {
         int time_interval;
         bool timer_stop_PN = false;
+        bool parabolic_clear = false;
         int parabolic_cnt = 0;
         System.Threading.Timer timer_;
 
@@ -26,16 +27,22 @@ namespace parabolic_1_3
         private void BTN1_Clicked(object sender, EventArgs e)
         {
             timer_stop_PN = true;
+            parabolic_clear = false;
             StartTimer();
         }
         private void BTN2_Clicked(object sender, EventArgs e)
         {
-            if (timer_stop_PN) timer_stop();
+            if (timer_stop_PN)
+            {
+                timer_stop();
+                parabolic_cnt = 0;
+                parabolic_clear = true;
+            }
         }
 
         private void StartTimer()
         {
-            time_interval = 1000; //1초?
+            time_interval = (int)SpeedSlider.Value; //1초?
             timer_start(MY_TIMER_TICK_OBJECT, 0, time_interval);
         }
 
@@ -74,8 +81,9 @@ namespace parabolic_1_3
                 StrokeWidth = 25
             };
 
-            float Vo = 100;
-            float Rad = (float)(Math.PI / 180) * 30;
+            float Vo = (float)PowerSlider.Value;
+
+            float Rad = (float)(Math.PI / 180) * (float)RadSlider.Value;
             float g = 10;
             for (int i = 0; i < parabolic_cnt; i++)
             {
@@ -90,6 +98,11 @@ namespace parabolic_1_3
             {
                 canvas.DrawLine(points[i], points[i + 1], paint);
             }
+        }
+
+        private void Slider_ValueChanged(object sender, ValueChangedEventArgs e)
+        {
+            //CanvasView.InvalidateSurface();
         }
     }
 }
