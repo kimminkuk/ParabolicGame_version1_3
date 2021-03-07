@@ -78,7 +78,7 @@ namespace parabolic_1_3
             {
                 Style = SKPaintStyle.Stroke,
                 Color = Color.Red.ToSKColor(),
-                StrokeWidth = 25
+                StrokeWidth = 5
             };
 
             float Vo = (float)PowerSlider.Value;
@@ -89,9 +89,21 @@ namespace parabolic_1_3
             {
                 g = 5 * i;
                 float x = (float)(Vo * Math.Cos(Rad)) * i;
-                float y = (float)(Vo * Math.Sin(Rad)) * i - g * i;
-                Math.Pow(i, 2);
-                points[i] = new SKPoint(x, info.Height - y);
+                float y =(float)(Vo * Math.Sin(Rad)) * i - g * i; //info.Height ( ex) 640 )
+                //x /= 100;
+                //y /= 100;
+                y = info.Height - y;
+                if( y < 0 ) //SKPaint 벗어 날 경우, 벽위에 부딪히는 개념 , M1V1 = M2V2 => 난 질량이 없다는 가정이니깐 그냥 위치만 바꿔주면될듯?
+                {
+                    y = y * -1;
+                }
+                x /= 50;
+                //y /= 50;
+                //else if ( y > info.Height ) // SKPaint 벗어 날 경우, 벽 아래에 부딪히는 개념
+                //{
+                //    y = info.Height - y;
+                //}
+                points[i] = new SKPoint(x, y);
             }
 
             for (int i = 0; i < parabolic_cnt - 1; i++)
