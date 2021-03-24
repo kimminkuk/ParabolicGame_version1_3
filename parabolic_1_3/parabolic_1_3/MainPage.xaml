@@ -49,8 +49,22 @@
 
             <skia:SKCanvasView x:Name="CanvasView"
                                PaintSurface="CanvasView_PaintSurface"
+                               EnableTouchEvents="True"
+                               Touch="CanvasView_Touch"
+                               
+                               Grid.Row="2"
+                               Grid.ColumnSpan="2">
+            
+            </skia:SKCanvasView>
+
+            
+            <skia:SKCanvasView x:Name="CanvasView2"
+                               PaintSurface="CanvasView_PaintSurface2"
                                Grid.Row="2"
                                Grid.ColumnSpan="2"/>
+            
+            
+
         </Grid>
     </StackLayout>
 

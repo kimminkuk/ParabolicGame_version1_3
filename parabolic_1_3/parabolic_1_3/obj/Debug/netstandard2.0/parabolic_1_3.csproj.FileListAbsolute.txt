@@ -2,7 +2,6 @@ C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\bin\Debug\
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\bin\Debug\netstandard2.0\parabolic_1_3.dll
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\bin\Debug\netstandard2.0\ref\parabolic_1_3.dll
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\bin\Debug\netstandard2.0\parabolic_1_3.pdb
-C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\parabolic_1_3.csprojAssemblyReference.cache
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\App.xaml.g.cs
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\MainPage.xaml.g.cs
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\parabolic_1_3.AssemblyInfoInputs.cache
@@ -12,3 +11,4 @@ C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\parabolic_1_3.dll
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\ref\parabolic_1_3.dll
 C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\parabolic_1_3.pdb
+C:\Users\rlaal\source\repos\parabolic_1_3\parabolic_1_3\parabolic_1_3\obj\Debug\netstandard2.0\parabolic_1_3.csprojAssemblyReference.cache
