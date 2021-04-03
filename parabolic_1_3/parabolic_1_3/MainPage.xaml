@@ -5,34 +5,7 @@
              x:Class="parabolic_1_3.MainPage">
 
     <StackLayout>
-        <!--
-        <Slider x:Name="PowerSlider"
-                    Maximum="1000"
-                    Margin="20,0"
-                    ValueChanged="Slider_ValueChanged"/>
-        <Label HorizontalTextAlignment="Center"
-                   Text="{Binding Source={x:Reference PowerSlider},
-                                            Path=Value,
-                                            StringFormat='Power = {0:F0}'}"/>
 
-        <Slider x:Name="SpeedSlider"
-                    Maximum="100"
-                    Margin="20,0"
-                    ValueChanged="Slider_ValueChanged"/>
-        <Label HorizontalTextAlignment="Center"
-                   Text="{Binding Source={x:Reference SpeedSlider},
-                                            Path=Value,
-                                            StringFormat='Speed = {0:F0}'}"/>
-
-        <Slider x:Name="RadSlider"
-                    Maximum="360"
-                    Margin="20,0"
-                    ValueChanged="Slider_ValueChanged"/>
-        <Label HorizontalTextAlignment="Center"
-                   Text="{Binding Source={x:Reference RadSlider},
-                                            Path=Value,
-                                            StringFormat='Rad = {0:F0}'}"/>
-        -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -41,35 +14,47 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="test_temp" Text="test" Background="Blue" Grid.Row="0"
-                    Grid.ColumnSpan="2"/>
+            <Grid BackgroundColor="LightGoldenrodYellow" Grid.Row="0" Grid.ColumnSpan="6"/>
 
-            <!--
-            <Button x:Name="tmp" Text="test" Clicked="BTN1_Clicked" BackgroundColor="Blue"
-                    Grid.Column="0"/>
-            <Button x:Name="tmp2" Text="test2" Clicked="BTN2_Clicked" BackgroundColor="Red"
-                    Grid.Column="1"/>
-            -->
+            <Label Text="POWER" FontSize="24" FontFamily="Yet R"
+                   Grid.Row="0" Grid.Column="0" TextColor="Black" HorizontalTextAlignment="Center"
+                   TextTransform="None" IsEnabled="False"/>
+            <Label Text="{Binding power}" FontSize="24"
+                   Grid.Row="0" Grid.Column="1"
+                   BackgroundColor="Aqua" FontFamily="Yet R"/>
+            
+            <Label Text="SCORE" FontSize="24" FontFamily="Yet R"
+                   Grid.Row="0" Grid.Column="2" TextColor="Black" HorizontalTextAlignment="Center"
+                   TextTransform="None" IsEnabled="False"/>
+            <Label Text="{Binding Game_score}" FontSize="24"
+                   Grid.Row="0" Grid.Column="3"
+                   BackgroundColor="Aqua" FontFamily="Yet R"/>
+            
+            <Label Text="LEVEL" FontSize="24" FontFamily="Yet R"
+                   Grid.Row="0" Grid.Column="4" TextColor="Black" HorizontalTextAlignment="Center"
+                   TextTransform="None" IsEnabled="False"/>
+            <Label Text="{Binding Game_Level}" FontSize="24"
+                   Grid.Row="0" Grid.Column="5"
+                   BackgroundColor="Aqua" FontFamily="Yet R"/>
+
             <skia:SKCanvasView x:Name="CanvasView"
                                PaintSurface="CanvasView_PaintSurface"
                                EnableTouchEvents="True"
-                               Touch="CanvasView_Touch"
-                               
+                              Touch="CanvasView_Touch"        
                                Grid.Row="1"
-                               Grid.ColumnSpan="2">
-            
+                               Grid.ColumnSpan="6">
             </skia:SKCanvasView>
 
-            
             <skia:SKCanvasView x:Name="CanvasView2"
                                PaintSurface="CanvasView_PaintSurface2"
                                Grid.Row="1"
-                               Grid.ColumnSpan="2"/>
-            
-            
-
+                               Grid.ColumnSpan="6"/>
         </Grid>
     </StackLayout>
 
