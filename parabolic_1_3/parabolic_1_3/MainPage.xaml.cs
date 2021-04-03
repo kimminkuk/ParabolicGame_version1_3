@@ -42,6 +42,7 @@ namespace parabolic_1_3
         public float control_rsin_abs = 0;
 
         public bool drag_onoff = true;
+        public bool game_over = false;
 
         public int time_interval;
         public bool timer_stop_PN = false;
@@ -64,7 +65,7 @@ namespace parabolic_1_3
         private readonly Dictionary<long, SKPoint> temporaryCircle = new Dictionary<long, SKPoint>();
         private readonly List<SKPoint> pathsCircle = new List<SKPoint>();
         private readonly List<SKPath> paths = new List<SKPath>();
-        
+
         public struct Square
         {
             public double Width { get; set; }
@@ -80,9 +81,22 @@ namespace parabolic_1_3
         }
 
         bool wall_1_pn = false;
+
+        //Text Binding
+        BindingPage BindingText = new BindingPage();
+
         public MainPage()
         {
             InitializeComponent();
+
+            BindingContext = new BindingPage();
+            BindingText = (BindingPage)BindingContext;
+
+            BindingText.Game_level = 1;
+            BindingText.Game_power = 0;
+            BindingText.Game_score = 0;
+            BindingText.Game_rad = 0;
+
             CanvasView2.InvalidateSurface();
             CanvasView.InvalidateSurface();
         }
@@ -99,6 +113,8 @@ namespace parabolic_1_3
 
         private void StartTimer()
         {
+
+
             if (timer_stop_PN)
             {
                 time_interval = 5;
@@ -236,509 +252,225 @@ namespace parabolic_1_3
             SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
             //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
 
-            canvas.Clear();
-
-            //End Point Block Location Setting
-            for (int i = 0; i < 5; i++)
+            if (game_over)
             {
-                rect_point[i] = (float)(e.Info.Width * 0.75 + e.Info.Width * (0.25 / 4) * i);
+                canvas.Clear();
             }
-            rect_point[5] = (float)(e.Info.Height * 0.2);
-            rect_point[6] = (float)(e.Info.Height * 0.4);
-            rect_point[7] = (float)(e.Info.Height * 0.6);
-            rect_point[8] = (float)(e.Info.Height * 0.8);
-            rect_point[9] = (float)(e.Info.Height);
-            for (int i = 0; i < 16; i++)
+            else
             {
-                rect[i] = new SKRect(rect_point[i % 4], rect_point[i / 4 + 5],
-                    rect_point[(i % 4) + 1], rect_point[i / 4 + 6]);
-            }
+                canvas.Clear();
 
-
-            SKPaint paint = new SKPaint
-            {
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill,
-                Color = Color.Red.ToSKColor(),
-                StrokeWidth = 5
-            };
-
-            //Init Location Constant
-            float InitConstant_X = (float)(e.Info.Width * 0.075);
-            float InitConstant_Y = (float)(e.Info.Height * 0.7);
-            default_radius_move_allow = (float)(e.Info.Width * 0.07);
-            default_Init_x = (float)(e.Info.Width * 0.075);
-            default_Init_y = (float)(e.Info.Height * 0.7);
-
-            //Init Circle
-            if (drag_onoff)
-            {
-                Init_x = (float)(e.Info.Width * 0.075);
-                Init_y = (float)(e.Info.Height * 0.7);
-
-                //Init rect_pn
-                for (int i = 0; i < 16; i++) rect_pn[i] = true;
-            }
-
-            //Init Location
-            SKCanvas canvas6 = surface.Canvas;
-            SKPaint paint6 = new SKPaint
-            {
-                Style = SKPaintStyle.Stroke,
-                Color = Color.Blue.ToSKColor(),
-                StrokeWidth = 2
-            };
-
-            SKCanvas canvas5 = surface.Canvas;
-            SKPaint paintInit = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = Color.Red.ToSKColor(),
-                StrokeWidth = 5
-            };
-
-            if (timer_stop_PN != true)
-            {
-                canvas6.DrawCircle(InitConstant_X, InitConstant_Y, (float)(e.Info.Width * 0.07), paint6);
-                canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width * 0.01), paintInit);
-            }
-
-            float dis = (float)(Math.Pow(Init_x - default_Init_x, 2) + Math.Pow(Init_y - default_Init_y, 2));
-            float dis_init_circle = (float)Math.Sqrt(dis);
-
-            control_rcos = (Init_x - default_Init_x) / dis_init_circle;
-            control_rsin = (Init_y - default_Init_y) / dis_init_circle;
-            control_rcos_abs = Math.Abs((Init_x - default_Init_x) / dis_init_circle); //각도 절대값 괜찮나?
-            control_rsin_abs = Math.Abs((Init_y - default_Init_y) / dis_init_circle); //각도 절대값 괜찮나?
-            Init_x = control_rcos * default_radius_move_allow + default_Init_x;
-            Init_y = control_rsin * default_radius_move_allow + default_Init_y;
-
-            // 공 날리기전에는 무조건 초기 원 설정 범위 내부에 들어오게 한다.
-            if (timer_stop_PN != true)
-            {
-                canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width * 0.01), paintInit);
-            }
-            //TEST ACTION
-            float Vo_test = ((float)Math.Sqrt((Math.Pow(Init_x - default_Init_x, 2) + Math.Pow(Init_y - default_Init_y, 2)))
-                / default_radius_move_allow) * 300; //500 -> 600 ->
-
-            //TEST PARABOLIC MOTION
-            int i_2 = 0;
-            for (int i = parabolic_cnt - 1; i < parabolic_cnt; i++)
-            {
-                if (i == -1) continue;
-
-                float t = (float)i / 80;
-                float g = 5 * t;
- 
-                float x = (float)(Vo_test * control_rcos_abs) * t + Init_x;
-                //float y = ((float)(Vo_test * control_rsin_abs) * t - g * t ); //info.Height ( ex) 640 )
-                float y = ((float)(Vo_test * control_rsin_abs) * t - g * t * 4); //info.Height ( ex) 640 )
-
-                //y = 491 - y;
-                //y = (e.Info.Height - y);
-                y = Init_y - y;
-                if (y < 0) //ex) -3 -30 - 100.. -30 -3
+                //End Point Block Location Setting
+                for (int i = 0; i < 5; i++)
                 {
-                    i_2++;
-                    Vo_test = (float)(Vo_test * 0.9);
-                    t = (float)i_2 / 50;
-                    g = 5 * t;
-                    //y = (y * -1) + g * t; //중력가속도 추가, 부딪힐때마다 파워 감소
-                    y = (y * -1) + g * t * 4; //중력가속도 추가, 부딪힐때마다 파워 감소
+                    rect_point[i] = (float)(e.Info.Width * 0.75 + e.Info.Width * (0.25 / 4) * i);
+                }
+                rect_point[5] = (float)(e.Info.Height * 0.2);
+                rect_point[6] = (float)(e.Info.Height * 0.4);
+                rect_point[7] = (float)(e.Info.Height * 0.6);
+                rect_point[8] = (float)(e.Info.Height * 0.8);
+                rect_point[9] = (float)(e.Info.Height);
+                for (int i = 0; i < 16; i++)
+                {
+                    rect[i] = new SKRect(rect_point[i % 4], rect_point[i / 4 + 5],
+                        rect_point[(i % 4) + 1], rect_point[i / 4 + 6]);
                 }
 
-                if (wall_1_pn != true && x >= (float)0.6 * e.Info.Width &&
-                   x <= (float)0.62 * e.Info.Width && y >= (float)0.2 * e.Info.Height)
+
+                SKPaint paint = new SKPaint
                 {
-                    wall_1_pn = true;
-                }
-                if (wall_1_pn)
+                    IsAntialias = true,
+                    Style = SKPaintStyle.Fill,
+                    Color = Color.Red.ToSKColor(),
+                    StrokeWidth = 5
+                };
+
+                //Init Location Constant
+                float InitConstant_X = (float)(e.Info.Width * 0.075);
+                float InitConstant_Y = (float)(e.Info.Height * 0.7);
+                default_radius_move_allow = (float)(e.Info.Width * 0.07);
+                default_Init_x = (float)(e.Info.Width * 0.075);
+                default_Init_y = (float)(e.Info.Height * 0.7);
+
+                //Init Circle
+                if (drag_onoff)
                 {
-                    x = (float)0.6 * e.Info.Width + ((float)0.6 * e.Info.Width - x);
+                    Init_x = (float)(e.Info.Width * 0.075);
+                    Init_y = (float)(e.Info.Height * 0.7);
+
+                    //Init rect_pn
+                    for (int i = 0; i < 16; i++) rect_pn[i] = true;
                 }
 
-                //GAME END
-                if (y > e.Info.Height || x < 0 || x > e.Info.Width)
+                //Init Location
+                SKCanvas canvas6 = surface.Canvas;
+                SKPaint paint6 = new SKPaint
                 {
-                    parabolic_cnt = 0;
-                    time_interval = 0;
-                    if (timer_stop_PN)
+                    Style = SKPaintStyle.Stroke,
+                    Color = Color.Blue.ToSKColor(),
+                    StrokeWidth = 2
+                };
+
+                SKCanvas canvas5 = surface.Canvas;
+                SKPaint paintInit = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = Color.Red.ToSKColor(),
+                    StrokeWidth = 5
+                };
+
+                if (timer_stop_PN != true)
+                {
+                    canvas6.DrawCircle(InitConstant_X, InitConstant_Y, (float)(e.Info.Width * 0.07), paint6);
+                    canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width * 0.01), paintInit);
+                }
+
+                float dis = (float)(Math.Pow(Init_x - default_Init_x, 2) + Math.Pow(Init_y - default_Init_y, 2));
+                float dis_init_circle = (float)Math.Sqrt(dis);
+
+                control_rcos = (Init_x - default_Init_x) / dis_init_circle;
+                control_rsin = (Init_y - default_Init_y) / dis_init_circle;
+                control_rcos_abs = Math.Abs((Init_x - default_Init_x) / dis_init_circle); //각도 절대값 괜찮나?
+                control_rsin_abs = Math.Abs((Init_y - default_Init_y) / dis_init_circle); //각도 절대값 괜찮나?
+                Init_x = control_rcos * default_radius_move_allow + default_Init_x;
+                Init_y = control_rsin * default_radius_move_allow + default_Init_y;
+
+                // 공 날리기전에는 무조건 초기 원 설정 범위 내부에 들어오게 한다.
+                if (timer_stop_PN != true)
+                {
+                    canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width * 0.01), paintInit);
+                }
+                //TEST ACTION
+                float Vo_test = ((float)Math.Sqrt((Math.Pow(Init_x - default_Init_x, 2) + Math.Pow(Init_y - default_Init_y, 2)))
+                    / default_radius_move_allow) * 300; //500 -> 600 ->
+
+                //Notify Power
+                BindingText = (BindingPage)BindingContext;
+                BindingText.Game_power = (int)Vo_test;
+                BindingText.Game_rad = (int)(control_rcos_abs * 100);
+
+                //TEST PARABOLIC MOTION
+                int i_2 = 0;
+                for (int i = parabolic_cnt - 1; i < parabolic_cnt; i++)
+                {
+                    if (i == -1) continue;
+
+                    float t = (float)i / 80;
+                    float g = 5 * t;
+
+                    float x = (float)(Vo_test * control_rcos_abs) * t + Init_x;
+                    //float y = ((float)(Vo_test * control_rsin_abs) * t - g * t ); //info.Height ( ex) 640 )
+                    float y = ((float)(Vo_test * control_rsin_abs) * t - g * t * 4); //info.Height ( ex) 640 )
+
+                    //y = 491 - y;
+                    //y = (e.Info.Height - y);
+                    y = Init_y - y;
+                    if (y < 0) //ex) -3 -30 - 100.. -30 -3
                     {
-                        timer_stop();
-                        timer_stop_PN = false;
-                        drag_onoff = true; //Initial x,y 
-                        Init_x = 0;
-                        Init_y = 0;
-
-                        //Init rect_pn
-                        for (int j = 0; j < 16; j++) rect_pn[j] = true;
+                        i_2++;
+                        Vo_test = (float)(Vo_test * 0.9);
+                        t = (float)i_2 / 50;
+                        g = 5 * t;
+                        //y = (y * -1) + g * t; //중력가속도 추가, 부딪힐때마다 파워 감소
+                        y = (y * -1) + g * t * 4; //중력가속도 추가, 부딪힐때마다 파워 감소
                     }
-                    CanvasView.InvalidateSurface();
-                    CanvasView2.InvalidateSurface();
-                    break;
-                }
 
-                // End Point Switch On
-                // First 1~16 check
-                // 0  1  2  3  4
-                // |  |  |  |  |
-                // |  |  |  |  |
-                // |  |  |  |  |
-                // |  |  |  |  |
-                if( x > (float)(e.Info.Width * 0.75) )
-                {
-                    for (int row = 0; row < 4; row++)
+                    if (wall_1_pn != true && x >= (float)0.6 * e.Info.Width &&
+                       x <= (float)0.62 * e.Info.Width && y >= (float)0.2 * e.Info.Height)
                     {
-                        if (rect_point[row] < x && rect_point[row+1] > x)
-                        {
-                            for (int col = 0; col < 4; col++)
-                            {
-                                //col 0~1, 1~2, 2~3, 3~4
-                                if (rect_point[col + 5] < y && rect_point[col + 6] > y) 
-                                {
-                                    rect_pn[4 * col + row] = false;
-                                }
-                            }
+                        wall_1_pn = true;
+                    }
+                    if (wall_1_pn)
+                    {
+                        x = (float)0.6 * e.Info.Width + ((float)0.6 * e.Info.Width - x);
+                    }
 
+                    //GAME END
+                    if (y > e.Info.Height || x < 0 || x > e.Info.Width)
+                    {
+                        parabolic_cnt = 0;
+                        time_interval = 0;
+                        game_over = true;
+                        if (timer_stop_PN)
+                        {
+                            timer_stop();
+                            timer_stop_PN = false;
+                            drag_onoff = true; //Initial x,y 
+                            Init_x = 0;
+                            Init_y = 0;
+
+                            //Init rect_pn
+                            for (int j = 0; j < 16; j++)
+                            {
+                                //rect_pn = false -> block destory
+                                if (!rect_pn[j]) game_over = false;
+                                rect_pn[j] = true;
+                            }
+                        }
+
+                        BindingText.Game_score = 0;
+                        BindingText.Game_level = 1;
+                        BindingText.Game_power = 0;
+                        BindingText.Game_rad = 0;
+
+                        if (game_over)
+                        {
+                            canvas.Clear();
+                            CanvasView2.InvalidateSurface();
+                        }
+                        else
+                        {
+                            CanvasView.InvalidateSurface();
+                            CanvasView2.InvalidateSurface();
+                        }
+                        break;
+                    }
+
+                    // End Point Switch On
+                    // First 1~16 check
+                    // 0  1  2  3  4
+                    // |  |  |  |  |
+                    // |  |  |  |  |
+                    // |  |  |  |  |
+                    // |  |  |  |  |
+                    if (x > (float)(e.Info.Width * 0.75))
+                    {
+                        test_block_destroy(info, x, y);
+                    }
+
+                    //공 위치 갱신 Draw
+                    canvas.DrawCircle(x, y, (float)0.01 * e.Info.Width, paint);
+                }
+            }
+        }
+
+        private void test_block_destroy(SKImageInfo info, float x, float y)
+        {
+            //ok?
+            for (int row = 0; row < 4; row++)
+            {
+                if (rect_pn[row] == true && rect_point[row] < x && rect_point[row + 1] > x)
+                {
+                    for (int col = 0; col < 4; col++)
+                    {
+                        //col 0~1, 1~2, 2~3, 3~4
+                        if (rect_pn[4 * col + row] == true && rect_point[col + 5] < y && rect_point[col + 6] > y)
+                        {
+                            rect_pn[4 * col + row] = false;
+                            BindingText.Game_score++;
+
+                            //if change, redraw
+                            CanvasView2.InvalidateSurface();
                         }
                     }
-                    CanvasView2.InvalidateSurface();
-                }
 
-                //공 위치 갱신 Draw
-                canvas.DrawCircle(x, y, (float)0.01 * e.Info.Width, paint);
-                
+                }
             }
         }
 
-#if false
-        private void CanvasView_PaintSurface_temp(object sender, SKPaintSurfaceEventArgs e)
-        {
-            SKImageInfo info = e.Info; //그리기 화면에 대한 정보 (너비, 높이 픽셀)
-            SKSurface surface = e.Surface; // 그리기 화면 자체
-            SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
-            //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
-
-            canvas.Clear();
-
-            SKPaint paint = new SKPaint
-            {
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill,
-                Color = Color.Red.ToSKColor(),
-                StrokeWidth = 5
-            };
-
-            // //TEST WALL 1
-            // SKCanvas canvas2 = surface.Canvas;
-            // SKPoint[] points2 = new SKPoint[4];
-            // points2[0] = new SKPoint((float)0.6 * e.Info.Width, (float)0.2 * e.Info.Height);
-            // points2[1] = new SKPoint((float)0.61 * e.Info.Width, (float)0.2 * e.Info.Height);
-            // points2[2] = new SKPoint((float)0.6 * e.Info.Width, (float)0.8 * e.Info.Height);
-            // points2[3] = new SKPoint((float)0.61 * e.Info.Width, (float)0.8 * e.Info.Height);
-            // canvas2.Clear();
-            // 
-            // SKPaint paint2 = new SKPaint
-            // {
-            //     Style = SKPaintStyle.Fill,
-            //     Color = Color.Blue.ToSKColor(),
-            //     StrokeWidth = 30
-            // };
-            // //canvas2.DrawPath(SKPath)
-            // canvas2.DrawLine(points2[0], points2[1], paint2); //1
-            // canvas2.DrawLine(points2[0], points2[2], paint2); //2
-            // canvas2.DrawLine(points2[1], points2[3], paint2); //1
-            // canvas2.DrawLine(points2[2], points2[3], paint2); //2
-            // 
-            // //TEST RECTANGLE GOAL 1
-            // SKCanvas canvas3 = surface.Canvas;
-            // float left2 = (float)(e.Info.Width * 0.75);
-            // float right2 = (float)(e.Info.Width);
-            // float bottom2 = (float)(e.Info.Height);
-            // float top2 = (float)(e.Info.Height * 0.2);
-            // SKRect rect2 = new SKRect(left2, top2, right2, bottom2);
-            // //canvas3.Clear();
-            // 
-            // SKPaint paint3 = new SKPaint
-            // {
-            //     Style = SKPaintStyle.Fill,
-            //     Color = Color.RosyBrown.ToSKColor()
-            // };
-            // 
-            // canvas3.DrawRect(rect2, paint3);
-
-            //Init Location Constant
-            //float InitConstant   = (float)(e.Info.Width * 0.07);
-            float InitConstant_X_left = (float)(e.Info.Width * 0.005);
-            float InitConstant_X_right = (float)(e.Info.Width * 0.145);
-            float InitConstant_Y_up = (float)(e.Info.Height * 0.63);
-            float InitConstant_Y_bottom = (float)(e.Info.Height * 0.77);
-            float InitConstant_X = (float)(e.Info.Width * 0.075);
-            float InitConstant_Y = (float)(e.Info.Height * 0.7);
-            default_radius_move_allow = (float)(e.Info.Width * 0.07);
-            default_Init_x = (float)(e.Info.Width * 0.075);
-            default_Init_y = (float)(e.Info.Height * 0.7);
-            //Init Circle
-            if (drag_onoff)
-            {
-                Init_x = (float)(e.Info.Width * 0.075);
-                Init_y = (float)(e.Info.Height * 0.7);
-            }
-
-            //Init Location
-            SKCanvas canvas6 = surface.Canvas;
-            //canvas6.Clear();
-            SKPaint paint6 = new SKPaint
-            {
-                Style = SKPaintStyle.Stroke,
-                Color = Color.Blue.ToSKColor(),
-                StrokeWidth = 2
-            };
-            if (timer_stop_PN != true)
-            {
-                //var x = touchPath;
-                //var y = touchPath;
-                //x.GetPoints.X
-                //canvas6.DrawCircle((touchPath.GetPoint.X, Init_y, (float)(e.Info.Width * 0.07), paint6);
-                canvas6.DrawCircle(InitConstant_X, InitConstant_Y, (float)(e.Info.Width * 0.07), paint6);
-
-            }
-
-            SKCanvas canvas5 = surface.Canvas;
-            SKPaint paintInit = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = Color.Red.ToSKColor(),
-                StrokeWidth = 5
-            };
-            //canvas5.Clear();
-            if (timer_stop_PN != true)
-            {
-                float dis = (float)(Math.Pow(Init_x - default_Init_x, 2) + Math.Pow(Init_y - default_Init_y, 2));
-                
-                float dis_init_circle = (float)Math.Sqrt(dis);
-                if(default_radius_move_allow <= dis_init_circle) //초기 원 범위 벗어날 경우,
-                {
-                    control_rcos = (Init_x - default_Init_x) / dis_init_circle;
-                    control_rsin = (Init_y - default_Init_y) / dis_init_circle;
-                    Init_x = control_rcos * default_radius_move_allow + default_Init_x;
-                    Init_y = control_rsin * default_radius_move_allow + default_Init_y;
-                }
-
-                canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width*0.01), paintInit);
-            }
-
-#if false
-            //  /*ADD GITHUB EXAMPLE CODE*/
-            //  var touchPathStroke = new SKPaint
-            //  {
-            //      IsAntialias = true,
-            //      Style = SKPaintStyle.Fill,
-            //      Color = SKColors.Purple,
-            //      StrokeWidth = 5
-            //  };
-            //  if (timer_stop_PN != true)
-            //  {
-            //       // draw the paths
-            //       foreach (var touchPath in temporaryPaths)
-            //       {
-            //           canvas.DrawPath(touchPath.Value, touchPathStroke);
-            //       }
-            //       foreach (var touchPath in paths)
-            //       {
-            //           canvas.DrawPath(touchPath, touchPathStroke);
-            //           
-            //       }
-            // 
-            //      // 
-            //      // // draw the paths
-            //      // foreach (var touchPath in temporaryCircle)
-            //      // { 
-            //      //     
-            //      //     //canvas.DrawPath(touchPath.Value, touchPathStroke);
-            //      //     canvas.DrawCircle(touchPath.Value.X, touchPath.Value.Y, (float)(e.Info.Width * 0.01), touchPathStroke);
-            //      // }
-            //      // foreach (var touchPath in pathsCircle)
-            //      // {
-            //      //     //canvas.DrawPath(touchPath, touchPathStroke);
-            //      //     canvas.DrawCircle(touchPath, (float)(e.Info.Width * 0.01), touchPathStroke);
-            //      // }
-            //  
-            //  }
-            // else
-            // {
-            //     canvas.Clear();
-            // }
-#endif
-
-            //TEST ACTION
-            float Vo_test = ((float)Math.Sqrt((Math.Pow(Init_x - default_Init_x, 2) + Math.Pow(Init_y - default_Init_y, 2))) 
-                / default_radius_move_allow) * 500;
-            
-
-            //TEST PARABOLIC MOTION           
-            float Vo = (float)PowerSlider.Value;
-            float Rad = (float)(Math.PI / 180) * (float)RadSlider.Value;
-            float g = 10;
-            int i_2 = 0;
-
-            //for (int i = parabolic_pre_cnt; i < parabolic_cnt; i++)
-            for (int i = parabolic_cnt-1; i < parabolic_cnt; i++)
-            //for (int i = 0; i < 5000; i++)
-            {
-                if (i == -1) continue;
-
-                float t = (float)i / 100;
-                //float t = i;
-                g = 5 * t;
-                //float x = (float)(Vo * Math.Cos(Rad)) * i;
-                //float y =(float)(Vo * Math.Sin(Rad)) * i - g * i; //info.Height ( ex) 640 )
-
-                float x = (float)(Vo * Math.Cos(Rad)) * t;
-                float y = (float)(Vo * Math.Sin(Rad)) * t - g * t; //info.Height ( ex) 640 )
-
-                y = 491 - y;
-                if (y < 0) //ex) -3 -30 - 100.. -30 -3
-                {
-                    i_2++;
-                    Vo = (float)(PowerSlider.Value * 0.98);
-                    t = (float)i_2 / 50;
-                    g = 5 * t;
-                    y = (y * -1) + g * t; //중력가속도 추가, 부딪힐때마다 파워 감소
-                }
-                //  if (wall_1_pn != true && y >= (float)0.2 * e.Info.Height && 
-                //      y <= (float)0.8 * e.Info.Height && x >= (float)0.6 * e.Info.Width)
-                //  {
-                //      wall_1_pn = true;
-                //  }
-                //  if (wall_1_pn)
-                //  {
-                //      x = (float)0.6 * e.Info.Width + ((float)0.6 * e.Info.Width - x);
-                //  }
-                //points[i] = new SKPoint(x, y);
-
-                //
-                 if(wall_1_pn !=true && x >= (float)0.6 * e.Info.Width && 
-                    x <= (float)0.62 * e.Info.Width && y >= (float)0.2 * e.Info.Height)
-                 {
-                     wall_1_pn = true;
-                 }
-                 if (wall_1_pn)
-                 {
-                     x = (float)0.6 * e.Info.Width + ((float)0.6 * e.Info.Width - x);
-                                         
-                     //canvas3.DrawRect(rect, paint3);
-                 }
-                canvas.DrawCircle(x, y, (float)0.01*e.Info.Width, paint);
-            }
-
-
-
-        }
-#endif
         private void Slider_ValueChanged(object sender, ValueChangedEventArgs e)
         {
             //CanvasView.InvalidateSurface();
-        }
-
-        private void CanvasView_PaintSurface3(object sender, SKPaintSurfaceEventArgs e)
-        {
-            SKImageInfo info = e.Info; //그리기 화면에 대한 정보 (너비, 높이 픽셀)
-            SKSurface surface = e.Surface; // 그리기 화면 자체
-            SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
-            //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
-
-            canvas.Clear();
-
-            //test rectangle ////Rectangle
-            //test rectangle SKCanvas canvas4 = surface.Canvas;
-            //test rectangle float left = (float)(e.Info.Width * 0.25);
-            //test rectangle float right = (float)(e.Info.Width * 0.5);
-            //test rectangle float bottom = (float)(e.Info.Height * 0.5);
-            //test rectangle float top = (float)(e.Info.Height * 0.2);
-            //test rectangle SKRect rect = new SKRect(left, top, right, bottom);
-            //test rectangle canvas4.Clear();
-            //test rectangle SKPaint paint3 = new SKPaint
-            //test rectangle {
-            //test rectangle     Style = SKPaintStyle.Fill,
-            //test rectangle     Color = Color.RosyBrown.ToSKColor()
-            //test rectangle };
-            //test rectangle canvas4.DrawRect(rect, paint3);
-
-            //x:2094, y 491
-            //Test Wall
-            SKCanvas canvas2 = surface.Canvas;
-            SKPoint[] points2 = new SKPoint[4];
-            points2[0] = new SKPoint((float)0.6 * e.Info.Width, (float)0.2 * e.Info.Height);
-            points2[1] = new SKPoint((float)0.61 * e.Info.Width, (float)0.2 * e.Info.Height);
-            points2[2] = new SKPoint((float)0.6 * e.Info.Width, (float)0.8 * e.Info.Height);
-            points2[3] = new SKPoint((float)0.61 * e.Info.Width, (float)0.8 * e.Info.Height);
-            canvas2.Clear();
-
-            SKPaint paint2 = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = Color.Blue.ToSKColor(),
-                StrokeWidth = 10
-            };
-            canvas2.DrawLine(points2[0], points2[1], paint2); //1
-            canvas2.DrawLine(points2[0], points2[2], paint2); //2
-            canvas2.DrawLine(points2[1], points2[3], paint2); //1
-            canvas2.DrawLine(points2[2], points2[3], paint2); //2
-
-            ////Rectangle
-            SKCanvas canvas3 = surface.Canvas;
-            float left2 = (float)(e.Info.Width * 0.75);
-            float right2 = (float)(e.Info.Width);
-            float bottom2 = (float)(e.Info.Height);
-            float top2 = (float)(e.Info.Height * 0.2);
-            SKRect rect2 = new SKRect(left2, top2, right2, bottom2);
-            canvas3.Clear();
-
-            SKPaint paint3 = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = Color.RosyBrown.ToSKColor()
-            };
-
-            canvas3.DrawRect(rect2, paint3);
-
-            //Init Circle
-            float Init_x = (float)(e.Info.Width * 0.15);
-            float Init_y = (float)(e.Info.Height * 0.7);
-            SKCanvas canvas5 = surface.Canvas;
-            SKPaint paint = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = Color.Red.ToSKColor(),
-                StrokeWidth = 5
-            };
-            canvas5.Clear();
-            if (timer_stop_PN != true)
-            {
-                canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width*0.01), paint);
-            }
-
-            //Init Location
-            SKCanvas canvas6 = surface.Canvas;
-            canvas6.Clear();
-            SKPaint paint6 = new SKPaint
-            {
-                Style = SKPaintStyle.Stroke,
-                Color = Color.Blue.ToSKColor(),
-                StrokeWidth = 2
-            };
-            if (timer_stop_PN != true)
-            {
-                canvas6.DrawCircle(Init_x, Init_y, (float)(e.Info.Width * 0.1), paint6);
-            }
-        }
-
-        private void DragGestureRecognizer_DragStarting(object sender, DragStartingEventArgs e)
-        {
-            Shape shape = (sender as Element).Parent as Shape;
-            e.Data.Properties.Add("Square", new Square(shape.Width, shape.Height));
         }
 
         private void CanvasView_PaintSurface2(object sender, SKPaintSurfaceEventArgs e)
@@ -747,150 +479,181 @@ namespace parabolic_1_3
             SKSurface surface = e.Surface; // 그리기 화면 자체
             SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
             //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
+            if (game_over)
+            {
+                canvas.Clear();
+                Gameover_textdraw(e);
+            }
+            else
+            {
+                canvas.Clear();
+                default_radius = (float)(e.Info.Width * 0.01);
+                default_radius_move_allow = (float)(e.Info.Width * 0.07);
+                default_Init_x = (float)(e.Info.Width * 0.075);
+                default_Init_y = (float)(e.Info.Height * 0.7);
+
+                //x:2094, y 491
+                //Test Wall
+                SKCanvas canvas2 = surface.Canvas;
+                SKPoint[] points2 = new SKPoint[4];
+                points2[0] = new SKPoint((float)0.6 * e.Info.Width, (float)0.2 * e.Info.Height);
+                points2[1] = new SKPoint((float)0.61 * e.Info.Width, (float)0.2 * e.Info.Height);
+                points2[2] = new SKPoint((float)0.6 * e.Info.Width, (float)0.8 * e.Info.Height);
+                points2[3] = new SKPoint((float)0.61 * e.Info.Width, (float)0.8 * e.Info.Height);
+                //canvas2.Clear();
+
+                SKPaint paint2 = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = Color.Blue.ToSKColor(),
+                    StrokeWidth = (float)(e.Info.Width * 0.015)
+                };
+
+                canvas.DrawLine(points2[0], points2[2], paint2);
+
+                SKCanvas canvas_test = surface.Canvas;
+                SKPaint painttest = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = Color.Blue.ToSKColor()
+                };
+                SKPaint painttest_false = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = Color.Red.ToSKColor()
+                };
+                for (int i = 0; i < 5; i++)
+                {
+                    rect_point[i] = (float)(e.Info.Width * 0.75 + e.Info.Width * (0.25 / 4) * i);
+                }
+
+                rect_point[5] = (float)(e.Info.Height * 0.2);
+                rect_point[6] = (float)(e.Info.Height * 0.4);
+                rect_point[7] = (float)(e.Info.Height * 0.6);
+                rect_point[8] = (float)(e.Info.Height * 0.8);
+                rect_point[9] = (float)(e.Info.Height);
+
+                for (int i = 0; i < 16; i++)
+                {
+                    rect[i] = new SKRect(rect_point[i % 4], rect_point[i / 4 + 5],
+                        rect_point[(i % 4) + 1], rect_point[i / 4 + 6]);
+                }
+
+                for (int i = 0; i < 16; i++)
+                {
+                    if (rect_pn[i])
+                        canvas_test.DrawRect(rect[i], painttest);
+                }
+            }
+        }
+
+        private void CanvasView_Gameover(object sender, SKPaintSurfaceEventArgs e)
+        {
+            SKImageInfo info = e.Info; //그리기 화면에 대한 정보 (너비, 높이 픽셀)
+            SKSurface surface = e.Surface; // 그리기 화면 자체
+            SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
+            //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
 
             canvas.Clear();
-            default_radius = (float)(e.Info.Width * 0.01);
-            default_radius_move_allow = (float)(e.Info.Width * 0.07);
-            default_Init_x = (float)(e.Info.Width * 0.075);
-            default_Init_y = (float)(e.Info.Height * 0.7);
-            //test rectangle ////Rectangle
-            //test rectangle SKCanvas canvas4 = surface.Canvas;
-            //test rectangle float left = (float)(e.Info.Width * 0.25);
-            //test rectangle float right = (float)(e.Info.Width * 0.5);
-            //test rectangle float bottom = (float)(e.Info.Height * 0.5);
-            //test rectangle float top = (float)(e.Info.Height * 0.2);
-            //test rectangle SKRect rect = new SKRect(left, top, right, bottom);
-            //test rectangle canvas4.Clear();
-            //test rectangle SKPaint paint3 = new SKPaint
-            //test rectangle {
-            //test rectangle     Style = SKPaintStyle.Fill,
-            //test rectangle     Color = Color.RosyBrown.ToSKColor()
-            //test rectangle };
-            //test rectangle canvas4.DrawRect(rect, paint3);
 
-            //x:2094, y 491
-            //Test Wall
-            SKCanvas canvas2 = surface.Canvas;
-            SKPoint[] points2 = new SKPoint[4];
-            points2[0] = new SKPoint((float)0.6 * e.Info.Width, (float)0.2 * e.Info.Height);
-            points2[1] = new SKPoint((float)0.61 * e.Info.Width, (float)0.2 * e.Info.Height);
-            points2[2] = new SKPoint((float)0.6 * e.Info.Width, (float)0.8 * e.Info.Height);
-            points2[3] = new SKPoint((float)0.61 * e.Info.Width, (float)0.8 * e.Info.Height);
-            //canvas2.Clear();
-
-            SKPaint paint2 = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = Color.Blue.ToSKColor(),
-                StrokeWidth = (float)(e.Info.Width * 0.015)
-            };
-            //canvas.DrawLine(points2[0], points2[1], paint2); //1
-            canvas.DrawLine(points2[0], points2[2], paint2); //2
-            //canvas.DrawLine(points2[1], points2[3], paint2); //1
-            //canvas.DrawLine(points2[2], points2[3], paint2); //2
-
-            // End Point Rectangle
-            // SKCanvas canvas3 = surface.Canvas;
-            // float left2 = (float)(e.Info.Width * 0.75);
-            // float right2 = (float)(e.Info.Width);
-            // float bottom2 = (float)(e.Info.Height);
-            // float top2 = (float)(e.Info.Height * 0.2);
-            // SKRect rect2 = new SKRect(left2, top2, right2, bottom2);
-            // //canvas3.Clear();
-            // 
-            // SKPaint paint3 = new SKPaint
-            // {
-            //     Style = SKPaintStyle.Fill,
-            //     Color = Color.RosyBrown.ToSKColor()
-            // };
-            // canvas3.DrawRect(rect2, paint3);
-
-
-            SKCanvas canvas_test = surface.Canvas;
-            SKPaint painttest = new SKPaint
+            SKPaint paintend = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
                 Color = Color.Blue.ToSKColor()
             };
-            SKPaint painttest_false = new SKPaint
+
+            SKPaint textPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                Color = Color.Red.ToSKColor(),
+                FakeBoldText = true,
+                StrokeWidth = 1
+            };
+
+            string game_over_text = "END";
+
+            //Adjust TextSize property so text is 95% of screen width
+            float textWidth = textPaint.MeasureText(game_over_text);
+            textPaint.TextSize = 0.95f * info.Width * textPaint.TextSize / textWidth;
+
+            //Find the text bounds
+            SKRect textBounds = new SKRect();
+            textPaint.MeasureText(game_over_text, ref textBounds);
+
+            // Calculate offsets to center the text on the screen
+            float xText = info.Width / 2 - textBounds.MidX;
+            float yText = info.Height / 2 - textBounds.MidY;
+
+            //And draw the text
+            canvas.DrawText(game_over_text, xText, yText, textPaint);
+        }
+
+        private void Gameover_textdraw(SKPaintSurfaceEventArgs e)
+        {
+            SKImageInfo info = e.Info; //그리기 화면에 대한 정보 (너비, 높이 픽셀)
+            SKSurface surface = e.Surface; // 그리기 화면 자체
+            SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
+            //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
+
+            canvas.Clear();
+
+            SKPaint paintend = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                Color = Color.Red.ToSKColor()
+                Color = Color.Blue.ToSKColor()
             };
-            for (int i = 0; i < 5; i++)
+
+            SKPaint textPaint = new SKPaint
             {
-                rect_point[i] = (float)(e.Info.Width * 0.75 + e.Info.Width * (0.25/4) * i);
+                Style = SKPaintStyle.Stroke,
+                Color = Color.Red.ToSKColor(),
+                FakeBoldText = true,
+                StrokeWidth = 1
+            };
+
+            string game_over_text = "END";
+
+            //Adjust TextSize property so text is 95% of screen width
+            float textWidth = textPaint.MeasureText(game_over_text);
+            textPaint.TextSize = 0.95f * info.Width * textPaint.TextSize / textWidth;
+
+            //Find the text bounds
+            SKRect textBounds = new SKRect();
+            textPaint.MeasureText(game_over_text, ref textBounds);
+
+            // Calculate offsets to center the text on the screen
+            float xText = info.Width / 2 - textBounds.MidX;
+            float yText = info.Height / 2 - textBounds.MidY;
+
+            //And draw the text
+            canvas.DrawText(game_over_text, xText, yText, textPaint);
+
+            gamecontinue_btn.IsVisible = true;
+        }
+
+        private void BTN_game_continue(object sender, EventArgs e)
+        {
+            parabolic_cnt = 0;
+            game_over = false;
+
+            timer_stop_PN = false;
+            drag_onoff = true; //Initial x,y 
+            Init_x = 0;
+            Init_y = 0;
+           
+            //Init rect_pn
+            for (int j = 0; j < 16; j++)
+            {
+                rect_pn[j] = true;
             }
 
-            rect_point[5] = (float)(e.Info.Height * 0.2);
-            rect_point[6] = (float)(e.Info.Height * 0.4);
-            rect_point[7] = (float)(e.Info.Height * 0.6);
-            rect_point[8] = (float)(e.Info.Height * 0.8);
-            rect_point[9] = (float)(e.Info.Height);
-
-            for(int i = 0; i < 16; i++)
-            {
-                rect[i] = new SKRect(rect_point[i % 4], rect_point[i / 4 + 5],
-                    rect_point[(i % 4) + 1], rect_point[i / 4 + 6]);
-            }
-
-            //rect[0] = new SKRect(rect_point[0], rect_point[5], rect_point[1], rect_point[6]);
-            //rect[1] = new SKRect(rect_point[1], rect_point[5], rect_point[2], rect_point[6]);
-            //rect[2] = new SKRect(rect_point[2], rect_point[5], rect_point[3], rect_point[6]);
-            //rect[3] = new SKRect(rect_point[3], rect_point[5], rect_point[4], rect_point[6]);
-            //
-            //rect[4] = new SKRect(rect_point[0], rect_point[6], rect_point[1], rect_point[7]);
-            //rect[5] = new SKRect(rect_point[1], rect_point[6], rect_point[2], rect_point[7]);
-            //rect[6] = new SKRect(rect_point[2], rect_point[6], rect_point[3], rect_point[7]);
-            //rect[7] = new SKRect(rect_point[3], rect_point[6], rect_point[4], rect_point[7]);
-            //
-            //rect[8] = new SKRect(rect_point[0], rect_point[7], rect_point[1], rect_point[8]);
-            //rect[9] = new SKRect(rect_point[1], rect_point[7], rect_point[2], rect_point[8]);
-            //rect[10] = new SKRect(rect_point[2], rect_point[7], rect_point[3], rect_point[8]);
-            //rect[11] = new SKRect(rect_point[3], rect_point[7], rect_point[4], rect_point[8]);
-            //
-            //rect[12] = new SKRect(rect_point[0], rect_point[8], rect_point[1], rect_point[9]);
-            //rect[13] = new SKRect(rect_point[1], rect_point[8], rect_point[2], rect_point[9]);
-            //rect[14] = new SKRect(rect_point[2], rect_point[8], rect_point[3], rect_point[9]);
-            //rect[15] = new SKRect(rect_point[3], rect_point[8], rect_point[4], rect_point[9]);
-
-
-            for (int i = 0; i < 16; i++)
-            {
-                if(rect_pn[i]) 
-                    canvas_test.DrawRect(rect[i], painttest);
-                //else 
-                //    canvas_test.DrawRect(rect[i], painttest_false);
-            }
-            // //Init Circle
-            // float Init_x = (float)(e.Info.Width * 0.075);
-            // float Init_y = (float)(e.Info.Height * 0.7);
-            // SKCanvas canvas5 = surface.Canvas;
-            // SKPaint paint = new SKPaint
-            // {
-            //     Style = SKPaintStyle.Fill,
-            //     Color = Color.Red.ToSKColor(),
-            //     StrokeWidth = 5
-            // };
-            // //canvas5.Clear();
-            // if (timer_stop_PN != true)
-            // {
-            //     canvas5.DrawCircle(Init_x, Init_y, (float)(e.Info.Width*0.01), paint);
-            // }
-            // 
-            // //Init Location
-            // SKCanvas canvas6 = surface.Canvas;
-            // //canvas6.Clear();
-            // SKPaint paint6 = new SKPaint
-            // {
-            //     Style = SKPaintStyle.Stroke,
-            //     Color = Color.Blue.ToSKColor(),
-            //     StrokeWidth = 2
-            // };
-            // if (timer_stop_PN != true)
-            // {
-            //     canvas6.DrawCircle(Init_x, Init_y, (float)(e.Info.Width * 0.07), paint6);
-            // }
+            BindingText.Game_score = 0;
+            BindingText.Game_level = 1;
+            BindingText.Game_power = 0;
+            BindingText.Game_rad = 0;
+            gamecontinue_btn.IsVisible = false;
+            CanvasView.InvalidateSurface();
+            CanvasView2.InvalidateSurface();
         }
 
         private void CanvasView_Touch(object sender, SKTouchEventArgs e)
@@ -951,37 +714,40 @@ namespace parabolic_1_3
             }
             */
 #endif
-            drag_onoff = false;
-            switch (e.ActionType)
+            if (!game_over)
             {
-                //1? case SKTouchAction.Pressed:
-                //1?     break;
-                case SKTouchAction.Moved:
-                    Init_x = e.Location.X;
-                    Init_y = e.Location.Y;
-                    if (e.InContact)
-                        ((SKCanvasView)sender).InvalidateSurface();
-                    break;
-                case SKTouchAction.Released:
-                    timer_stop_PN = true;
-                    parabolic_clear = false;
-                    parabolic_cnt = 0;
-                    parabolic_pre_cnt = 0;
-                    wall_1_pn = false;
-                    break;
-            }
-             // // update the UI
-             // if (e.InContact)
-             //     ((SKCanvasView)sender).InvalidateSurface();
-             // 
-            if (timer_stop_PN)
-            {
-                StartTimer(); // make graphics
-            }
+                drag_onoff = false;
+                switch (e.ActionType)
+                {
+                    //1? case SKTouchAction.Pressed:
+                    //1?     break;
+                    case SKTouchAction.Moved:
+                        Init_x = e.Location.X;
+                        Init_y = e.Location.Y;
+                        if (e.InContact)
+                            ((SKCanvasView)sender).InvalidateSurface();
+                        break;
+                    case SKTouchAction.Released:
+                        timer_stop_PN = true;
+                        parabolic_clear = false;
+                        parabolic_cnt = 0;
+                        parabolic_pre_cnt = 0;
+                        wall_1_pn = false;
+                        break;
+                }
+                // // update the UI
+                // if (e.InContact)
+                //     ((SKCanvasView)sender).InvalidateSurface();
+                // 
+                if (timer_stop_PN)
+                {
+                    StartTimer(); // make graphics
+                }
 
-            // we have handled these events
-            e.Handled = true;
-            //drag_onoff = true;
+                // we have handled these events
+                e.Handled = true;
+                //drag_onoff = true;
+            }
         }
     }
 }

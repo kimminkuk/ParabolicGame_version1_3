@@ -9,6 +9,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="10*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -18,43 +19,61 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Grid BackgroundColor="LightGoldenrodYellow" Grid.Row="0" Grid.ColumnSpan="6"/>
+            <Grid BackgroundColor="LightGoldenrodYellow" Grid.Row="0" Grid.ColumnSpan="8"/>
 
             <Label Text="POWER" FontSize="24" FontFamily="Yet R"
                    Grid.Row="0" Grid.Column="0" TextColor="Black" HorizontalTextAlignment="Center"
                    TextTransform="None" IsEnabled="False"/>
-            <Label Text="{Binding power}" FontSize="24"
+            <Label Text="{Binding Game_power}" FontSize="24"
                    Grid.Row="0" Grid.Column="1"
                    BackgroundColor="Aqua" FontFamily="Yet R"/>
-            
-            <Label Text="SCORE" FontSize="24" FontFamily="Yet R"
+
+            <Label Text="Θ" FontSize="24" FontFamily="Yet R"
                    Grid.Row="0" Grid.Column="2" TextColor="Black" HorizontalTextAlignment="Center"
                    TextTransform="None" IsEnabled="False"/>
-            <Label Text="{Binding Game_score}" FontSize="24"
+            <Label Text="{Binding Game_rad}" FontSize="24"
                    Grid.Row="0" Grid.Column="3"
+                   BackgroundColor="Aqua" FontFamily="Yet R"/>
+
+            <Label Text="SCORE" FontSize="24" FontFamily="Yet R"
+                   Grid.Row="0" Grid.Column="4" TextColor="Black" HorizontalTextAlignment="Center"
+                   TextTransform="None" IsEnabled="False"/>
+            <Label Text="{Binding Game_score}" FontSize="24"
+                   Grid.Row="0" Grid.Column="5"
                    BackgroundColor="Aqua" FontFamily="Yet R"/>
             
             <Label Text="LEVEL" FontSize="24" FontFamily="Yet R"
-                   Grid.Row="0" Grid.Column="4" TextColor="Black" HorizontalTextAlignment="Center"
+                   Grid.Row="0" Grid.Column="6" TextColor="Black" HorizontalTextAlignment="Center"
                    TextTransform="None" IsEnabled="False"/>
-            <Label Text="{Binding Game_Level}" FontSize="24"
-                   Grid.Row="0" Grid.Column="5"
+            <Label Text="{Binding Game_level}" FontSize="24"
+                   Grid.Row="0" Grid.Column="7"
                    BackgroundColor="Aqua" FontFamily="Yet R"/>
+
+            <Button Text="continue?" FontSize="24" FontFamily="Yet R"
+                    x:Name="gamecontinue_btn"
+                    Grid.Row="1" Grid.RowSpan="2" Grid.Column="7"
+                    Clicked="BTN_game_continue" IsVisible="false"
+                    TextColor="Black"/>
 
             <skia:SKCanvasView x:Name="CanvasView"
                                PaintSurface="CanvasView_PaintSurface"
                                EnableTouchEvents="True"
                               Touch="CanvasView_Touch"        
                                Grid.Row="1"
-                               Grid.ColumnSpan="6">
+                               Grid.RowSpan="2"
+                               Grid.ColumnSpan="8">
             </skia:SKCanvasView>
 
             <skia:SKCanvasView x:Name="CanvasView2"
                                PaintSurface="CanvasView_PaintSurface2"
                                Grid.Row="1"
-                               Grid.ColumnSpan="6"/>
+                               Grid.RowSpan="2"
+                               Grid.ColumnSpan="8"/>
+
         </Grid>
     </StackLayout>
 
