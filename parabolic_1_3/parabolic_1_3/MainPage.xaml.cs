@@ -40,17 +40,23 @@ namespace parabolic_1_3
         public float control_rsin = 0;
         public float control_rcos_abs = 0;
         public float control_rsin_abs = 0;
+        public float _degrees = 0;
+        public float _degrees_reverse = 0;
 
         public bool drag_onoff = true;
         public bool game_over = false;
+        public bool ball_drawing = false;
 
         public int time_interval;
         public bool timer_stop_PN = false;
+        public bool timer_stop_PN_BlockRotation = false;
         public bool parabolic_clear = false;
         public int parabolic_cnt = 0;
         public int parabolic_pre_cnt = 0;
+        public int BlockRotationCnt = 0;
 
         System.Threading.Timer timer_;
+        System.Threading.Timer timer_BlockRotation;
 
         SKPoint[] points = new SKPoint[50000];
         SKPoint[] Points2 = new SKPoint[4];
@@ -113,32 +119,60 @@ namespace parabolic_1_3
 
         private void StartTimer()
         {
-
-
             if (timer_stop_PN)
             {
                 time_interval = 5;
+                //base.OnAppearing();
+                //AnimationLoop(); //Test Smooth Animation
                 timer_start(MY_TIMER_TICK_OBJECT, 0, time_interval);
             }
         }
 
-        private async void MY_TIMER_TICK_OBJECT2(object state)
+        private void StartTimer_BlockRotation()
         {
-            await Task.Run(() =>
+            if (timer_stop_PN)
             {
-                parabolic_cnt++;
-            });
+                timer_stop_PN_BlockRotation = true;
+                //timer_start_BlockRotation(MY_TIMER_TICK_OBJECT_BlockRotation, 0, time_interval);
+            }
+        }
+
+        private void timer_start_BlockRotation(TimerCallback callback, int start, int time_interval)
+        {
+            timer_BlockRotation = new System.Threading.Timer(callback, null, start, time_interval);
+        }
+
+        async Task AnimationLoop()
+        {
+            parabolic_cnt++;
+            CanvasView.InvalidateSurface();
+            TimeSpan.FromSeconds(1.0 / 30);
         }
 
         private async void MY_TIMER_TICK_OBJECT(object state)
         {
+            //await Task.Run(() =>
+            //{
+            //    parabolic_cnt++;
+            //});
             await Task.Run(() =>
             {
                 parabolic_cnt++;
+                CanvasView.InvalidateSurface(); 
+                if(timer_stop_PN_BlockRotation)
+                {
+                    BlockRotationCnt++;
+                    CanvasView2.InvalidateSurface();
+                }
+                //CanvasView2.InvalidateSurface();
             });
+        }
+
+        private async void MY_TIMER_TICK_OBJECT_BlockRotation(object state)
+        {
             await Task.Run(() =>
             {
-                CanvasView.InvalidateSurface();
+                //CanvasView2.InvalidateSurface();
             });
         }
 
@@ -150,6 +184,10 @@ namespace parabolic_1_3
         private void timer_stop()
         {
             timer_.Dispose();
+            //if (timer_stop_PN_BlockRotation)
+            //{
+            //    timer_BlockRotation.Dispose();
+            //}
         }
 #if false
         private void Thread_CalPalabolic(object obj) //x:2094, y 491
@@ -255,6 +293,7 @@ namespace parabolic_1_3
             if (game_over)
             {
                 canvas.Clear();
+                //Gameover_textdraw(e);
             }
             else
             {
@@ -390,11 +429,13 @@ namespace parabolic_1_3
                     {
                         parabolic_cnt = 0;
                         time_interval = 0;
+                        BlockRotationCnt = 0;
                         game_over = true;
                         if (timer_stop_PN)
                         {
                             timer_stop();
                             timer_stop_PN = false;
+                            timer_stop_PN_BlockRotation = false;
                             drag_onoff = true; //Initial x,y 
                             Init_x = 0;
                             Init_y = 0;
@@ -416,6 +457,7 @@ namespace parabolic_1_3
                         if (game_over)
                         {
                             canvas.Clear();
+                            Gameover_textdraw(e);
                             CanvasView2.InvalidateSurface();
                         }
                         else
@@ -461,6 +503,7 @@ namespace parabolic_1_3
 
                             //if change, redraw
                             CanvasView2.InvalidateSurface();
+                            
                         }
                     }
 
@@ -483,6 +526,7 @@ namespace parabolic_1_3
             {
                 canvas.Clear();
                 Gameover_textdraw(e);
+                return;
             }
             else
             {
@@ -543,7 +587,251 @@ namespace parabolic_1_3
                 {
                     if (rect_pn[i])
                         canvas_test.DrawRect(rect[i], painttest);
+                    else //Rotation Block or Delete Block
+                    {
+                         //Thread?
+                         StartTimer_BlockRotation();
+                         
+                         float rotation_x = (rect_point[i % 4] + rect_point[(i % 4) + 1]) / 2;
+                         float rotation_y = (rect_point[i / 4 + 5] + rect_point[i / 4 + 6]) / 2;
+                         //float rotation_x = (rect_point[0] + rect_point[1]) / 2;
+                         //float rotation_y = (rect_point[5] + rect_point[6]) / 2;
+                         //float rotation_x = (info.Width) / 2;
+                         //float rotation_y = (info.Height) / 2;
+                         
+                         OnDrawRoation(rotation_x, rotation_y, e, painttest);
+                         
+                    }
                 }
+            }
+        }
+
+        private void OnDrawRoation(float rotation_x, float rotation_y, SKPaintSurfaceEventArgs e, SKPaint painttest)
+        {
+            IncrementDegrees();
+            IncrementDegrees_reverse();
+            SKImageInfo info = e.Info; //그리기 화면에 대한 정보 (너비, 높이 픽셀)
+            SKSurface surface = e.Surface; // 그리기 화면 자체
+            SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
+            SKCanvas canvas_Reverse = surface.Canvas;
+            canvas_Reverse.Save();
+            canvas.Save();
+
+            //Block Color Changed
+            SKPaint painttest_false = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true,
+
+                Color = Color.Red.ToSKColor()
+            };
+            //Block Color Changed
+            SKPaint painttest_false2 = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true,
+
+                Color = Color.Green.ToSKColor()
+            };
+            //Block Color Changed
+            SKPaint painttest_false3 = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true,
+
+                Color = Color.Yellow.ToSKColor()
+            };
+            //Block Color Changed
+            SKPaint painttest_false4 = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true,
+
+                Color = Color.Purple.ToSKColor()
+            };
+
+            float _squareWidth = (float)(info.Width * 0.25) / 5;
+
+            float WidthMove = rotation_x - (float)((info.Width * 0.2) / 200) * BlockRotationCnt;
+            float WidthMove_Reverse = rotation_x + (float)((info.Width * 0.2) / 200) * BlockRotationCnt;
+
+            float HeightMove = rotation_y + (float)((info.Height * 0.8) / 200) * BlockRotationCnt;
+
+            float Vo_Rotation = 300;
+            float Rad_const = 0.7071f; // sqrt(2)/2;
+            float t = BlockRotationCnt / 80.0f;
+            float g = 5 * t;
+            float x = rotation_x - (Vo_Rotation * Rad_const) * t / 2;
+            float x_Reverse = rotation_x + (Vo_Rotation * Rad_const) * t / 2;
+            float x_up = rotation_x - (Vo_Rotation * Rad_const) * t / 20;
+
+            float[] x2 = new float[8];
+            float[] x2_reverse = new float[8];
+
+            float[] y2 = new float[4];
+            for (int i = 0; i < 8; i++)
+            {
+                x2[i] = rotation_x - (Vo_Rotation * Rad_const) * t / (1.7f + 0.1f * i);
+            }
+            for(int i = 0; i < 8; i++)
+            {
+                x2_reverse[i] = rotation_x + (Vo_Rotation * Rad_const) * t / (1.7f + 0.1f * i);
+            }
+            //x2[0] = rotation_x - (Vo_Rotation * Rad_const) * t / 2.0f;
+            //x2[1] = rotation_x - (Vo_Rotation * Rad_const) * t / 2.5f;
+            //
+            //x2[2] = rotation_x + (Vo_Rotation * Rad_const) * t / 2.0f;
+            //x2[3] = rotation_x + (Vo_Rotation * Rad_const) * t / 2.5f;
+
+            float y = (Vo_Rotation * Rad_const) * t - g * t * 14;
+
+            y2[0] = (Vo_Rotation * Rad_const) * t - g * t * 14f;
+            y2[1] = (Vo_Rotation * Rad_const) * t - g * t * 12f;
+
+            y2[2] = (Vo_Rotation * Rad_const) * t - g * t * 14.5f;
+            y2[3] = (Vo_Rotation * Rad_const) * t - g * t * 13f;
+
+
+
+            y = rotation_y - y;
+            for(int i = 0; i < 4; i++)
+              y2[i] = rotation_y - y2[i];
+            //if (x > info.Width || x < 0 || y > info.Height || y < 0)
+            //{
+            //    return;
+            //}
+
+            // //rotation_x -= WidthMove;
+            // //rotation_y += HeightMove;
+            // 
+            // //canvas.RotateDegrees(_degrees, rotation_x, rotation_y );
+            // //canvas.RotateDegrees(_degrees, WidthMove, HeightMove);
+            // SKPath path = new SKPath();
+            // //path.MoveTo(rotation_x, rotation_y);
+            // //path.LineTo(rotation_x - WidthMove, rotation_y);
+            // //path.LineTo(rotation_x - WidthMove, rotation_y + HeightMove);
+            // //path.LineTo(rotation_x , rotation_y + HeightMove);
+            // //path.LineTo(rotation_x, rotation_y);
+            // 
+            // //path.MoveTo(rotation_x, rotation_y);
+            // //path.LineTo(rotation_x + _squareWidth, rotation_y);
+            // //path.LineTo(rotation_x + _squareWidth, rotation_y - _squareWidth);
+            // //path.LineTo(rotation_x, rotation_y - _squareWidth);
+            // //path.LineTo(rotation_x, rotation_y);
+            // 
+            // //path.MoveTo(WidthMove, HeightMove);
+            // //path.LineTo(WidthMove + rotation_x, HeightMove);
+            // //path.LineTo(WidthMove + rotation_x, HeightMove - rotation_x);
+            // //path.LineTo(WidthMove, HeightMove - rotation_x);
+            // //path.LineTo(WidthMove, HeightMove);
+            // 
+            // //path.MoveTo(WidthMove, HeightMove); //A1
+            // //path.LineTo(WidthMove + _squareWidth, HeightMove); // A2
+            // //path.LineTo(WidthMove + _squareWidth, HeightMove - _squareWidth); //A3
+            // //path.LineTo(WidthMove, HeightMove - _squareWidth); //A4
+            // //path.LineTo(WidthMove, HeightMove); //A5 == A1
+            // 
+            // //canvas.DrawPath(path, painttest_false);
+            // 
+            // //path.MoveTo(WidthMove, HeightMove); //A1
+            // //path.LineTo(WidthMove + _squareWidth, HeightMove); // A2
+            // //path.LineTo(WidthMove + _squareWidth, HeightMove - _squareWidth); //A3
+            // //path.LineTo(WidthMove, HeightMove); //A5 == A1
+            // //
+            // //canvas.DrawPath(path, painttest_false);
+            // //canvas.Restore();
+            // //
+            // //canvas_Reverse.RotateDegrees(_degrees_reverse, WidthMove, HeightMove);
+            // //SKPath path_reverse = new SKPath();
+            // //path_reverse.MoveTo(WidthMove, HeightMove); //A1
+            // //path_reverse.LineTo(WidthMove + _squareWidth, HeightMove - _squareWidth); //A3
+            // //path_reverse.LineTo(WidthMove, HeightMove - _squareWidth); //A4
+            // //path_reverse.LineTo(WidthMove, HeightMove); //A5 == A1
+            // //canvas_Reverse.DrawPath(path_reverse, painttest_false2);
+            // //canvas_Reverse.Restore();
+            // 
+            // //canvas.RotateDegrees(_degrees, x, y);
+            // //canvas.RotateDegrees(_degrees, x, y);
+            // path.MoveTo(x, y); //A1
+            // path.LineTo(x + _squareWidth, y); // A2
+            // path.LineTo(x + _squareWidth, y - _squareWidth); //A3
+            // path.LineTo(x, y); //A5 == A1
+            // 
+            // canvas.DrawPath(path, painttest_false);
+            // canvas.Restore();
+            // 
+            // //canvas_Reverse.RotateDegrees(_degrees_reverse, x_Reverse, y);
+            // //canvas_Reverse.RotateDegrees(_degrees_reverse, x_Reverse, y);
+            // SKPath path_reverse = new SKPath();
+            // path_reverse.MoveTo(x_Reverse, y); //A1
+            // path_reverse.LineTo(x_Reverse + _squareWidth, y - _squareWidth); //A3
+            // path_reverse.LineTo(x_Reverse, y - _squareWidth); //A4
+            // path_reverse.LineTo(x_Reverse, y); //A5 == A1
+            // canvas_Reverse.DrawPath(path_reverse, painttest_false2);
+            // canvas_Reverse.Restore();
+
+
+            SKCanvas[] canvas_divide = new SKCanvas[8];
+            //SKPath[] path_divide = new SKPath[16];
+            for (int i = 0; i < 8; i++)
+            {
+                canvas_divide[i] = surface.Canvas;
+                canvas_divide[i].Save();
+                SKPath path_divide = new SKPath();
+                //x += _squareWidth / 4 * (i % 4);
+                //y -= _squareWidth / 4 * (i / 4 + 1);
+                path_divide.MoveTo(x2[i], y2[i/2]);
+                path_divide.LineTo(x2[i] + _squareWidth / 4, y2[i / 2]);
+                path_divide.LineTo(x2[i] + _squareWidth / 4 , y2[i / 2] - _squareWidth / 4);
+                path_divide.LineTo(x2[i], y2[i / 2] - _squareWidth / 4);
+                path_divide.LineTo(x2[i], y2[i / 2]);
+                
+                if(i > 4)
+                    canvas_divide[i].DrawPath(path_divide, painttest_false);
+                else
+                    canvas_divide[i].DrawPath(path_divide, painttest_false2);
+
+                canvas_divide[i].Restore();
+            }
+
+            SKCanvas[] canvas_divide_reverse = new SKCanvas[8];
+            for (int i = 0; i < 8; i++)
+            {
+                canvas_divide_reverse[i] = surface.Canvas;
+                canvas_divide_reverse[i].Save();
+                SKPath path_divide = new SKPath();
+                //x += _squareWidth / 4 * (i % 4);
+                //y -= _squareWidth / 4 * (i / 4 + 1);
+                path_divide.MoveTo(x2_reverse[i], y2[i / 2]);
+                path_divide.LineTo(x2_reverse[i] + _squareWidth / 4, y2[i / 2]);
+                path_divide.LineTo(x2_reverse[i] + _squareWidth / 4, y2[i / 2] - _squareWidth / 4);
+                path_divide.LineTo(x2_reverse[i], y2[i / 2] - _squareWidth / 4);
+                path_divide.LineTo(x2_reverse[i], y2[i / 2]);
+                if(i > 4)
+                    canvas_divide_reverse[i].DrawPath(path_divide, painttest_false3);
+                else
+                    canvas_divide_reverse[i].DrawPath(path_divide, painttest_false4);
+                canvas_divide_reverse[i].Restore();
+            }
+        }
+
+        private void IncrementDegrees_reverse()
+        {
+            _degrees_reverse = parabolic_cnt % 360;
+            if (_degrees_reverse >= 360)
+            {
+                _degrees_reverse = 0;
+            }
+            _degrees_reverse *= -1;
+        }
+
+        private void IncrementDegrees()
+        {
+            //_degrees += 3.5f;
+            _degrees = parabolic_cnt % 360;
+            if (_degrees >= 360)
+            {
+                _degrees = 0;
             }
         }
 
@@ -555,7 +843,7 @@ namespace parabolic_1_3
             //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
 
             canvas.Clear();
-
+            
             SKPaint paintend = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
@@ -595,8 +883,8 @@ namespace parabolic_1_3
             SKCanvas canvas = surface.Canvas; //그래픽그리기 컨텍스트
             //개체는 그래픽 SKCanvan 변환과 클리핑을 포함 하는 그래픽 상태를 캡슐화 합니다.
 
-            canvas.Clear();
-
+            //canvas.Clear();
+            
             SKPaint paintend = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
@@ -611,6 +899,7 @@ namespace parabolic_1_3
                 StrokeWidth = 1
             };
 
+            //canvas.Save();
             string game_over_text = "END";
 
             //Adjust TextSize property so text is 95% of screen width
@@ -628,6 +917,7 @@ namespace parabolic_1_3
             //And draw the text
             canvas.DrawText(game_over_text, xText, yText, textPaint);
 
+            //canvas.Restore();
             gamecontinue_btn.IsVisible = true;
         }
 
@@ -733,6 +1023,7 @@ namespace parabolic_1_3
                         parabolic_cnt = 0;
                         parabolic_pre_cnt = 0;
                         wall_1_pn = false;
+                        ball_drawing = true;
                         break;
                 }
                 // // update the UI
